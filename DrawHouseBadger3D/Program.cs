@@ -14,11 +14,10 @@ namespace NullPointersEtc.DrawHouseBadger3D
         [AllowNull, Description("Required designer variable.")]
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
+        [Description("Clean up any resources being used.")]
+        protected override void Dispose(
+            [Description("true if managed resources should be disposed; otherwise, false.")]
+            bool disposing)
         {
             if (disposing && (components != null))
             {
@@ -370,7 +369,10 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new Draw3d() { Dock = DockStyle.Fill };
+            drawCanvas = new Draw3d(_topLeft:new(0.0f, 0.0f, 1000.0f),
+                _topRight: new(1000.0f,0.0f,1000.0f),
+                _bottomLeft:new(0.0f,0.0f,0.0f)) { Dock = DockStyle.Fill };
+
             Controls.Add(drawCanvas);
         }
 
