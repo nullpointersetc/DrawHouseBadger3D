@@ -8,6 +8,23 @@ namespace NullPointersEtc.DrawHouseBadger3D
     {
         public Program()
         {
+            statusStrip1 = new();
+            draw1stBadgerButton = new();
+            draw2ndBadgerButton = new();
+            draw3rdBadgerButton = new();
+            draw4thBadgerButton = new();
+            draw5thBadgerButton = new();
+            draw6thBadgerButton = new();
+            draw7thBadgerButton = new();
+            draw8thBadgerButton = new();
+            draw9thBadgerButton = new();
+            draw10thBadgerButton = new();
+            draw11thBadgerButton = new();
+            draw12thBadgerButton = new();
+            draw13thBadgerButton = new();
+            draw14thBadgerButton = new();
+            draw15thBadgerButton = new();
+            draw16thBadgerButton = new();
             InitializeComponent();
         }
 
@@ -369,9 +386,10 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new Draw3d(_topLeft:new(0.0f, 0.0f, 1000.0f),
-                _topRight: new(1000.0f,0.0f,1000.0f),
-                _bottomLeft:new(0.0f,0.0f,0.0f)) { Dock = DockStyle.Fill };
+            drawCanvas = new NullPointersEtc.TelevisionScreen.TelevisionScreen
+            {
+                Dock = DockStyle.Fill
+            };
 
             Controls.Add(drawCanvas);
         }
