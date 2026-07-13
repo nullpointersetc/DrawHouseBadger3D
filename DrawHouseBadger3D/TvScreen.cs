@@ -1,4 +1,6 @@
 ﻿#pragma warning disable IDE0130
+using System.ComponentModel;
+
 namespace NullPointersEtc.TelevisionScreen
 {
     using System.Drawing.Drawing2D;
@@ -51,16 +53,16 @@ namespace NullPointersEtc.TelevisionScreen
         public Vector3D CameraOrientation { get; set; } = new Vector3D(0, 1000, 1000);
 
         /// <summary>Rotation about the X axis, in radians.</summary>
-        public double RotationX { get; set; } = 0.4;
+        public float RotationX { get; set; } = 0.4F;
 
         /// <summary>Rotation about the Y axis, in radians.</summary>
-        public double RotationY { get; set; } = 0.6;
+        public float RotationY { get; set; } = 0.6F;
 
         /// <summary>Rotation about the Z axis, in radians.</summary>
-        public double RotationZ { get; set; } = 0.0;
+        public float RotationZ { get; set; } = 0.0F;
 
         /// <summary>Uniform scale applied after projection, in pixels per world unit.</summary>
-        public double DotsPerInch { get; set; } = 3.0;
+        public float DotsPerInch { get; set; } = 3.0F;
 
         /// <summary>If true, uses simple perspective projection; otherwise orthographic.</summary>
         public bool UsePerspective { get; set; } = true;
@@ -113,8 +115,8 @@ namespace NullPointersEtc.TelevisionScreen
 
             // Dragging right yaws the object around the vertical (Z) axis;
             // dragging down pitches it forward around the horizontal (X) axis.
-            RotationZ += dx * 0.01;
-            RotationX += dy * 0.01;
+            RotationZ += dx * 0.01F;
+            RotationX += dy * 0.01F;
 
             _lastMousePos = e.Location;
             Invalidate();
@@ -135,9 +137,9 @@ namespace NullPointersEtc.TelevisionScreen
         /// </summary>
         private (Vector3D right, Vector3D up, Vector3D forward) GetCameraBasis()
         {
-            Vector3D forward = CameraDirection.Normalized();
-            Vector3D right = forward.Cross(CameraOrientation).Normalized();
-            Vector3D up = right.Cross(forward).Normalized();
+            Vector3D forward = CameraDirection.AsUnit;
+            Vector3D right = forward.Cross(CameraOrientation).AsUnit;
+            Vector3D up = right.Cross(forward).AsUnit;
             return (right, up, forward);
         }
 
@@ -153,7 +155,7 @@ namespace NullPointersEtc.TelevisionScreen
 
             // Transform into camera space: position relative to the eye,
             // expressed in terms of the camera's right/up/forward basis.
-            Vector3D relative = world - CameraPosition;
+            Vector3D relative = world.Minus(CameraPosition);
             double camX = relative.Dot(camRight);
             double camY = relative.Dot(camForward); // depth: distance along the view direction
             double camZ = relative.Dot(camUp);       // height within the view plane
@@ -191,7 +193,7 @@ namespace NullPointersEtc.TelevisionScreen
             {
                 Vector3D world = mesh.Vertices[idx]
                     .RotatedX(RotationX).RotatedY(RotationY).RotatedZ(RotationZ);
-                Vector3D relative = world - CameraPosition;
+                Vector3D relative = world.Minus(CameraPosition);
                 sum += relative.Dot(camForward);
             }
             return sum / faceIndices.Length;
@@ -241,82 +243,85 @@ namespace NullPointersEtc.TelevisionScreen
             }
         }
     }
-}
 
-namespace NullPointersEtc.TelevisionScreen
-{
-    /// <summary>
-    /// A simple point in 3D space.
-    ///
-    /// COORDINATE SYSTEM CONVENTION used throughout this class:
-    ///   +X = to the right of the origin        -X = to the left of the origin
-    ///   +Y = away from the viewer (depth)      -Y = toward the viewer
-    ///   +Z = above the XY plane (up)           -Z = below the XY plane (down)
-    ///
-    /// This is a right-handed, Z-up system (X = left/right, Y = depth,
-    /// Z = up/down). Note that this differs from raw screen/pixel coordinates
-    /// (where the vertical axis grows downward), so the projection step below
-    /// maps world Z to screen Y and flips it when converting to pixels.
-    /// </summary>
-    public struct Vector3D
+
+    [Description("A simple point in 3D space.")]
+    public readonly struct Vector3D(
+        [Description("Positive x is to the right of the origin. " +
+        "Negative x is to the left of the origin.")]
+        float x,
+        [Description("Positive y is farther away from the viewer than the origin. "+
+        "Negative y is nearer to the viewer than the origin.")]
+        float y,
+        [Description("Positive z is above the XY plane. " +
+        "Negative z is below the XY plane.")]
+        float z)
+        : IEquatable<Vector3D>
     {
-        public double X;
-        public double Y;
-        public double Z;
+        public readonly float X => xx;
+        public readonly double Y => yy;
+        public readonly double Z => zz;
 
-        public Vector3D(double x, double y, double z)
+        public readonly bool Equals(Vector3D that) =>
+            this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
+
+        public override readonly bool Equals(object? obj) =>
+            obj is Vector3D that
+            && this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
+
+        public override readonly int GetHashCode() =>
+            HashCode.Combine(xx, yy, zz);
+
+        public readonly Vector3D Negate() =>
+            new Vector3D(x: -xx, y: -yy, z: -zz);
+
+        public readonly Vector3D Plus(Vector3D that) =>
+            new(x: xx + that.xx, y: yy + that.yy, z: zz + that.zz);
+
+        public readonly Vector3D Minus(Vector3D that) =>
+            new(x: xx - that.xx, y: yy - that.yy, z: zz - that.zz);
+
+        public readonly Vector3D Times(float that) =>
+            new(x: xx * that, y: yy * that, z: zz * that);
+
+        [Description("Rotate this point about the X axis by the given angle (radians).")]
+        public Vector3D RotatedX(float radians)
         {
-            X = x;
-            Y = y;
-            Z = z;
+            float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
+            return new Vector3D(xx, yy * cos - zz * sin, yy * sin + zz * cos);
         }
 
-        public static Vector3D operator +(Vector3D a, Vector3D b) =>
-            new Vector3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-
-        public static Vector3D operator -(Vector3D a, Vector3D b) =>
-            new Vector3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-
-        public static Vector3D operator *(Vector3D a, double s) =>
-            new Vector3D(a.X * s, a.Y * s, a.Z * s);
-
-        /// <summary>Rotate this point about the X axis by the given angle (radians).</summary>
-        public Vector3D RotatedX(double angle)
+        [Description("Rotate this point about the Y axis by the given angle (radians).")]
+        public Vector3D RotatedY(float radians)
         {
-            double cos = Math.Cos(angle), sin = Math.Sin(angle);
-            return new Vector3D(X, Y * cos - Z * sin, Y * sin + Z * cos);
+            float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
+            return new Vector3D(xx * cos + zz * sin, yy, -xx * sin + zz * cos);
         }
 
-        /// <summary>Rotate this point about the Y axis by the given angle (radians).</summary>
-        public Vector3D RotatedY(double angle)
+        [Description("Rotate this point about the Z axis by the given angle (radians).")]
+        public Vector3D RotatedZ(float radians)
         {
-            double cos = Math.Cos(angle), sin = Math.Sin(angle);
-            return new Vector3D(X * cos + Z * sin, Y, -X * sin + Z * cos);
+            float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
+            return new Vector3D(xx * cos - yy * sin, xx * sin + yy * cos, zz);
         }
 
-        /// <summary>Rotate this point about the Z axis by the given angle (radians).</summary>
-        public Vector3D RotatedZ(double angle)
-        {
-            double cos = Math.Cos(angle), sin = Math.Sin(angle);
-            return new Vector3D(X * cos - Y * sin, X * sin + Y * cos, Z);
-        }
+        public readonly double Dot(Vector3D that) =>
+            xx * that.xx + yy * that.yy + zz * that.zz;
 
-        public double Dot(Vector3D other) => X * other.X + Y * other.Y + Z * other.Z;
+        public readonly Vector3D Cross(Vector3D that) =>
+            new(x: yy * that.zz - zz * that.yy,
+            y: zz * that.xx - xx * that.zz,
+            z: xx * that.yy - yy * that.xx);
 
-        /// <summary>Cross product (this × other), producing a vector perpendicular to both.</summary>
-        public Vector3D Cross(Vector3D other) => new Vector3D(
-            Y * other.Z - Z * other.Y,
-            Z * other.X - X * other.Z,
-            X * other.Y - Y * other.X);
+        public float Length => MathF.Sqrt(xx * xx + yy * yy + zz * zz);
 
-        public double Length => Math.Sqrt(X * X + Y * Y + Z * Z);
+        [Description("A unit vector in the same direction as this vector")]
+        public Vector3D AsUnit => xx != 0.0F || yy != 0.0F || zz != 0.0F
+                ? this.Times(1.0F / this.Length)
+                : throw new DivideByZeroException(
+                    nameof(AsUnit) + " can only be called on a non-zero vector");
 
-        /// <summary>Returns a unit-length copy of this vector (or the zero vector unchanged).</summary>
-        public Vector3D Normalized()
-        {
-            double len = Length;
-            return len > 1e-9 ? this * (1.0 / len) : this;
-        }
+        private readonly float xx = x, yy = y, zz = z;
     }
 
     /// <summary>
@@ -337,7 +342,7 @@ namespace NullPointersEtc.TelevisionScreen
         /// <summary>Builds a simple cube centered on the origin with the given side length.</summary>
         public static Mesh3D CreateCube(double size, Color? color = null)
         {
-            double h = size / 2.0;
+            float h = (float)(size / 2.0);
             var mesh = new Mesh3D();
 
             if (color.HasValue)
