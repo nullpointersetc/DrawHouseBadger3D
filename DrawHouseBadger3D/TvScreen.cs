@@ -26,31 +26,89 @@ namespace NullPointersEtc.TelevisionScreen
     /// </summary>
     public class TelevisionScreen : UserControl
     {
+        private Vector3D myCamera;
+        private Vector3D myWayForward;
+        private Vector3D myWayRight;
+        private Vector3D myWayUp;
+
+        public TelevisionScreen()
+        {
+            myCamera = new(x: 0.0F, y: -1000.0F, z: 1000.0F);
+            myWayForward = new(x: 0.0F, y: 724.0F / 1024.0F, z: -724.0F / 1024.0F);
+            myWayRight = new(x: 1.0F, y: 0.0F, z: 0.0F);
+            myWayUp = myWayRight.Cross(myWayForward);
+
+            SetStyle(ControlStyles.AllPaintingInWmPaint
+                     | ControlStyles.UserPaint
+                     | ControlStyles.OptimizedDoubleBuffer
+                     | ControlStyles.ResizeRedraw, true);
+
+            BackColor = Color.Black;
+
+            MouseDown += TelevisionScreen_MouseDown;
+            MouseMove += TelevisionScreen_MouseMove;
+            MouseUp += TelevisionScreen_MouseUp;
+
+            // Demo content so the control shows something useful out of the box.
+            Objects.Add(Mesh3D.CreateCube(100, Color.Cyan));
+        }
+
         public List<Mesh3D> Objects { get; } = new List<Mesh3D>();
 
-        /// <summary>
-        /// Where the camera sits in world space. Defaults to (0, -1000, 1000):
-        /// 1000 units toward the viewer from the origin (-Y) and 1000 units
-        /// above the origin (+Z) — i.e. the client rectangle's midpoint in
-        /// OnPaint is viewed from a point in front of and above the origin.
-        /// </summary>
-        public Vector3D CameraPosition { get; set; } = new Vector3D(0, -1000, 1000);
+        [Description("Where the camera sits in world space.")]
+        public Vector3D CameraPosition
+        {
+            get => myCamera;
+        }
 
-        /// <summary>
-        /// The direction the camera is pointing (need not be unit length).
-        /// Defaults to (0, 1000, -1000), i.e. pointing from CameraPosition
-        /// straight at the origin.
-        /// </summary>
-        public Vector3D CameraDirection { get; set; } = new Vector3D(0, 1000, -1000);
+        [Description("Where the camera is pointing. " +
+            "When it is set, it is resized to a unit vector.")]
+        public Vector3D CameraDirection { get => myWayForward; }
 
-        /// <summary>
-        /// A reference "up" direction used to orient the camera (need not be
-        /// unit length or exactly perpendicular to CameraDirection — it is
-        /// orthogonalized automatically). Defaults to (0, 1000, 1000), i.e.
-        /// pointing from CameraPosition toward a point 2000 units above the
-        /// origin.
-        /// </summary>
-        public Vector3D CameraOrientation { get; set; } = new Vector3D(0, 1000, 1000);
+        [Description("Which way is to the right of the center of the image. " +
+            "When it is set, it is resized to a unit vector.")]
+        public Vector3D ThisWayRight { get => myWayRight; }
+
+        [Description("Which way is up in the image. " +
+            "When it is set, it is resized to a unit vector.")]
+        public Vector3D ThisWayUp { get => myWayUp; }
+
+        public void SetCamera(
+            Vector3D position,
+            Vector3D direction,
+            Vector3D thisWayUp)
+        {
+            if (direction.IsZero)
+                throw new ArgumentException(
+                    nameof(direction) + " cannot be the zero vector.");
+
+            if (thisWayUp.IsZero)
+                throw new ArgumentException(
+                    nameof(thisWayUp) + " cannot be the zero vector.");
+
+            Vector3D unitDirection = direction.AsUnit();
+
+            Vector3D unitThisWayUp = thisWayUp.AsUnit();
+
+            Vector3D orthogonalRight = unitDirection.Cross(unitThisWayUp);
+
+            if (orthogonalRight.IsZero)
+                throw new ArgumentException(
+                    nameof(direction) +
+                    " cannot be parallel to " +
+                    nameof(thisWayUp));
+
+            Vector3D unitRight = orthogonalRight.AsUnit();
+
+            Vector3D orthogonalUp = unitRight.Cross(unitDirection);
+
+            Vector3D unitUp = orthogonalUp.AsUnit();
+
+            myWayForward = unitDirection;
+            myWayRight = unitRight;
+            myWayUp = unitUp;
+            Invalidate();
+        }
 
         /// <summary>Rotation about the X axis, in radians.</summary>
         public float RotationX { get; set; } = 0.4F;
@@ -79,23 +137,6 @@ namespace NullPointersEtc.TelevisionScreen
 
         private Point _lastMousePos;
         private bool _dragging;
-
-        public TelevisionScreen()
-        {
-            SetStyle(ControlStyles.AllPaintingInWmPaint
-                     | ControlStyles.UserPaint
-                     | ControlStyles.OptimizedDoubleBuffer
-                     | ControlStyles.ResizeRedraw, true);
-
-            BackColor = Color.Black;
-
-            MouseDown += TelevisionScreen_MouseDown;
-            MouseMove += TelevisionScreen_MouseMove;
-            MouseUp += TelevisionScreen_MouseUp;
-
-            // Demo content so the control shows something useful out of the box.
-            Objects.Add(Mesh3D.CreateCube(100, Color.Cyan));
-        }
 
         private void TelevisionScreen_MouseDown(
             object? sender, MouseEventArgs e)
@@ -126,21 +167,10 @@ namespace NullPointersEtc.TelevisionScreen
             object? sender, MouseEventArgs e)
         {
             _dragging = false;
-        }
 
-        /// <summary>
-        /// Builds an orthonormal camera basis (right, up, forward) from
-        /// CameraDirection and CameraOrientation. "forward" points the way
-        /// the camera is looking; "right" and "up" span the view/projection
-        /// plane, with "right" aligned so that increasing world X projects
-        /// to the right of the screen.
-        /// </summary>
-        private (Vector3D right, Vector3D up, Vector3D forward) GetCameraBasis()
-        {
-            Vector3D forward = CameraDirection.AsUnit;
-            Vector3D right = forward.Cross(CameraOrientation).AsUnit;
-            Vector3D up = right.Cross(forward).AsUnit;
-            return (right, up, forward);
+            SetCamera(position: new(x: 160.0F, y: -1000.0F, z: 1000.0F),
+                direction: new(x: 100.0F, y: 1000.0F, z: -1000.0F),
+                thisWayUp: myWayUp);
         }
 
         /// <summary>
@@ -148,17 +178,17 @@ namespace NullPointersEtc.TelevisionScreen
         /// applying the current object rotation, the camera transform, and the
         /// current scale/projection mode.
         /// </summary>
-        private PointF Project(Vector3D v, Vector3D camRight, Vector3D camUp, Vector3D camForward)
+        private PointF Project(Vector3D v)
         {
             // Apply object rotation (objects spin about the origin in world space).
             Vector3D world = v.RotatedX(RotationX).RotatedY(RotationY).RotatedZ(RotationZ);
 
             // Transform into camera space: position relative to the eye,
             // expressed in terms of the camera's right/up/forward basis.
-            Vector3D relative = world.Minus(CameraPosition);
-            double camX = relative.Dot(camRight);
-            double camY = relative.Dot(camForward); // depth: distance along the view direction
-            double camZ = relative.Dot(camUp);       // height within the view plane
+            Vector3D relative = world.Minus(myCamera);
+            double camX = relative.Dot(myWayRight);
+            double camY = relative.Dot(myWayForward);
+            double camZ = relative.Dot(myWayUp);
 
             double px, pz;
 
@@ -186,15 +216,15 @@ namespace NullPointersEtc.TelevisionScreen
         }
 
         /// <summary>Camera-space depth of a face's vertices (averaged), used for simple painter's-algorithm sorting.</summary>
-        private double FaceDepth(Mesh3D mesh, int[] faceIndices, Vector3D camForward)
+        private double FaceDepth(Mesh3D mesh, int[] faceIndices)
         {
             double sum = 0;
             foreach (int idx in faceIndices)
             {
                 Vector3D world = mesh.Vertices[idx]
                     .RotatedX(RotationX).RotatedY(RotationY).RotatedZ(RotationZ);
-                Vector3D relative = world.Minus(CameraPosition);
-                sum += relative.Dot(camForward);
+                Vector3D relative = world.Minus(myCamera);
+                sum += relative.Dot(myWayForward);
             }
             return sum / faceIndices.Length;
         }
@@ -206,22 +236,20 @@ namespace NullPointersEtc.TelevisionScreen
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.Clear(BackColor);
 
-            var (camRight, camUp, camForward) = GetCameraBasis();
-
             foreach (Mesh3D mesh in Objects)
             {
                 if (mesh.DrawFaces && mesh.Faces.Count > 0)
                 {
                     // Painter's algorithm: draw faces furthest from the camera first.
                     var orderedFaces = mesh.Faces
-                        .OrderByDescending(f => FaceDepth(mesh, f, camForward));
+                        .OrderByDescending(f => FaceDepth(mesh, f));
 
                     using (var faceBrush = new SolidBrush(mesh.FaceColor))
                     using (var facePen = new Pen(mesh.EdgeColor))
                     {
                         foreach (int[] face in orderedFaces)
                         {
-                            PointF[] pts = face.Select(idx => Project(mesh.Vertices[idx], camRight, camUp, camForward)).ToArray();
+                            PointF[] pts = face.Select(idx => Project(mesh.Vertices[idx])).ToArray();
                             e.Graphics.FillPolygon(faceBrush, pts);
                             if (mesh.DrawEdges)
                                 e.Graphics.DrawPolygon(facePen, pts);
@@ -234,8 +262,8 @@ namespace NullPointersEtc.TelevisionScreen
                     {
                         foreach (var edge in mesh.Edges)
                         {
-                            PointF p1 = Project(mesh.Vertices[edge.Item1], camRight, camUp, camForward);
-                            PointF p2 = Project(mesh.Vertices[edge.Item2], camRight, camUp, camForward);
+                            PointF p1 = Project(mesh.Vertices[edge.Item1]);
+                            PointF p2 = Project(mesh.Vertices[edge.Item2]);
                             e.Graphics.DrawLine(pen, p1, p2);
                         }
                     }
@@ -313,13 +341,17 @@ namespace NullPointersEtc.TelevisionScreen
             y: zz * that.xx - xx * that.zz,
             z: xx * that.yy - yy * that.xx);
 
-        public float Length => MathF.Sqrt(xx * xx + yy * yy + zz * zz);
+        public readonly bool IsZero =>
+            xx == 0.0F && yy == 0.0F && zz == 0.0F;
+
+        public float Length =>
+            MathF.Sqrt(xx * xx + yy * yy + zz * zz);
 
         [Description("A unit vector in the same direction as this vector")]
-        public Vector3D AsUnit => xx != 0.0F || yy != 0.0F || zz != 0.0F
-                ? this.Times(1.0F / this.Length)
+        public Vector3D AsUnit() =>
+            !IsZero ? Times(1.0F / Length)
                 : throw new DivideByZeroException(
-                    nameof(AsUnit) + " can only be called on a non-zero vector");
+                    nameof(AsUnit) + " can be called only if IsZero is false");
 
         private readonly float xx = x, yy = y, zz = z;
     }
