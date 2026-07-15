@@ -3,6 +3,7 @@ using System.ComponentModel;
 
 namespace NullPointersEtc.TelevisionScreen
 {
+    using System.Diagnostics;
     using System.Drawing.Drawing2D;
     /// <summary>
     /// A UserControl that renders one or more 3D wireframe/solid objects.
@@ -233,6 +234,25 @@ namespace NullPointersEtc.TelevisionScreen
         {
             base.OnPaint(e);
 
+            Triangle3D r1 = new Triangle3D(
+                first: new Vector3D(-100, 100, 0),
+                second: new Vector3D(100, 100, 0),
+                third: new Vector3D(0, 300, 0),
+                color: Color.Red);
+
+            Trace.WriteLine(category: "Triangle starts at lower left: X", value: r1.First.X);
+            Trace.WriteLine(category: "Triangle starts at lower left: Y", value: r1.First.Y);
+            Trace.WriteLine(category: "Triangle starts at lower left: Z", value: r1.First.Z);
+            Trace.WriteLine(category: "Triangle continues at lower right: X", value: r1.Second.X);
+            Trace.WriteLine(category: "Triangle continues at lower right: Y", value: r1.Second.Y);
+            Trace.WriteLine(category: "Triangle continues at lower right: Z", value: r1.Second.Z);
+            Trace.WriteLine(category: "Triangle ends at top center: X", value: r1.Third.X);
+            Trace.WriteLine(category: "Triangle ends at top center: Y", value: r1.Third.Y);
+            Trace.WriteLine(category: "Triangle ends at top center", value: r1.Third.Z);
+            Trace.WriteLine(category: "Triangle should be facing up; normal should have x=0 and y=0 and z positive: X", value: r1.Front.X);
+            Trace.WriteLine(category: "Triangle should be facing up; normal should have x=0 and y=0 and z positive: Y", value: r1.Front.Y);
+            Trace.WriteLine(category: "Triangle should be facing up; normal should have x=0 and y=0 and z positive", value: r1.Front.Z);
+
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.Clear(BackColor);
 
@@ -354,6 +374,43 @@ namespace NullPointersEtc.TelevisionScreen
                     nameof(AsUnit) + " can be called only if IsZero is false");
 
         private readonly float xx = x, yy = y, zz = z;
+    }
+
+    public readonly struct Triangle3D
+    {
+        public Triangle3D(
+            Vector3D first,
+            Vector3D second,
+            Vector3D third,
+            System.Drawing.Color color)
+        {
+            Vector3D front = third.Minus(second)
+                .Cross(first.Minus(second));
+
+            if (front.IsZero)
+                throw new ArgumentException(
+                    "The three points of a triangle must not be collinear.",
+                    nameof(third));
+
+            myFirst = first;
+            mySecond = second;
+            myThird = third;
+            myColor = color;
+            myFront = front.AsUnit();
+        }
+
+        public Vector3D First { get => myFirst; }
+        public Vector3D Second { get => mySecond; }
+        public Vector3D Third { get => myThird; }
+        public Vector3D Front { get => myFront; }
+
+        public System.Drawing.Color Color { get => myColor; }
+
+        private readonly Vector3D myFirst;
+        private readonly Vector3D mySecond;
+        private readonly Vector3D myThird;
+        private readonly Vector3D myFront;
+        private readonly System.Drawing.Color myColor;
     }
 
     /// <summary>
