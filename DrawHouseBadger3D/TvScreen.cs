@@ -4,7 +4,10 @@ using System.ComponentModel;
 namespace NullPointersEtc.TelevisionScreen
 {
     using System.Diagnostics;
+    using System.Drawing;
     using System.Drawing.Drawing2D;
+    using System.Windows.Forms.VisualStyles;
+
     /// <summary>
     /// A UserControl that renders one or more 3D wireframe/solid objects.
     ///
@@ -27,22 +30,62 @@ namespace NullPointersEtc.TelevisionScreen
     /// </summary>
     public class TelevisionScreen : UserControl
     {
-        private Vector3D myCamera;
-        private Vector3D myWayForward;
-        private Vector3D myWayRight;
-        private Vector3D myWayUp;
+        private NewPoint3D myCamera;
+        private NewVector3D myWayForward;
+        private NewVector3D myWayRight;
+        private NewVector3D myWayUp;
 
         public TelevisionScreen()
         {
-            myCamera = new(x: 0.0F, y: -1000.0F, z: 1000.0F);
-            myWayForward = new(x: 0.0F, y: 724.0F / 1024.0F, z: -724.0F / 1024.0F);
-            myWayRight = new(x: 1.0F, y: 0.0F, z: 0.0F);
-            myWayUp = myWayRight.Cross(myWayForward);
+            myCamera = new(x: 0.0F, y: -400.0F, z: 400.0F);
+
+            NewPoint3D origin = new(x: 0.0F, y: 0.0F, z: 0.0F);
+            myWayForward = origin.Minus(myCamera).AsUnit();
+
+            NewVector3D tempUp = new NewVector3D(x: myWayForward.X,
+                y: myWayForward.Y, z: -myWayForward.Z);
+
+            myWayRight = myWayForward.Cross(tempUp).AsUnit();
+
+            myWayUp = myWayRight.Cross(myWayForward).AsUnit();
+
+            _cameraPosition = 0;
+
+            _cameraPositions =
+                new List<Tuple<NewPoint3D, NewVector3D, NewVector3D, NewVector3D>>();
+
+            _cameraPositions.Add(Tuple.Create(myCamera, myWayForward, myWayRight, myWayUp));
+
+            for (int x1 = 40; x1 <= 400; x1 += 40)
+            {
+                NewPoint3D _cameraPosition1 = new(x: x1, y: -400.0F, z: 400.0F);
+                NewVector3D _cameraForward1 = origin.Minus(_cameraPosition1).AsUnit();
+                NewVector3D _cameraUp1 = new NewVector3D(x: _cameraForward1.X,
+                    y: _cameraForward1.Y, z: -_cameraForward1.Z);
+                NewVector3D _cameraRight1 = _cameraForward1.Cross(_cameraUp1).AsUnit();
+                NewVector3D _cameraUp2 = _cameraRight1.Cross(_cameraForward1).AsUnit();
+
+                _cameraPositions.Add(Tuple.Create(_cameraPosition1,
+                    _cameraForward1, _cameraRight1, _cameraUp1));
+            }
+
+            for (int y1 = -360; y1 <= -280; y1 += 10)
+            {
+                NewPoint3D _cameraPosition1 = new(x: 400.0F, y: y1, z: 400.0F);
+                NewVector3D _cameraForward1 = origin.Minus(_cameraPosition1).AsUnit();
+                NewVector3D _cameraUp1 = new NewVector3D(x: _cameraForward1.X,
+                    y: _cameraForward1.Y, z: -_cameraForward1.Z);
+                NewVector3D _cameraRight1 = _cameraForward1.Cross(_cameraUp1).AsUnit();
+                NewVector3D _cameraUp2 = _cameraRight1.Cross(_cameraForward1).AsUnit();
+
+                _cameraPositions.Add(Tuple.Create(_cameraPosition1,
+                    _cameraForward1, _cameraRight1, _cameraUp1));
+            }
 
             SetStyle(ControlStyles.AllPaintingInWmPaint
                      | ControlStyles.UserPaint
                      | ControlStyles.OptimizedDoubleBuffer
-                     | ControlStyles.ResizeRedraw, true);
+                     | ControlStyles.ResizeRedraw, value: true);
 
             BackColor = Color.Black;
 
@@ -57,27 +100,21 @@ namespace NullPointersEtc.TelevisionScreen
         public List<Mesh3D> Objects { get; } = new List<Mesh3D>();
 
         [Description("Where the camera sits in world space.")]
-        public Vector3D CameraPosition
-        {
-            get => myCamera;
-        }
+        public NewPoint3D CameraPosition { get => myCamera; }
 
-        [Description("Where the camera is pointing. " +
-            "When it is set, it is resized to a unit vector.")]
-        public Vector3D CameraDirection { get => myWayForward; }
+        [Description("Where the camera is pointing. Always a unit vector.")]
+        public NewVector3D CameraDirection { get => myWayForward; }
 
-        [Description("Which way is to the right of the center of the image. " +
-            "When it is set, it is resized to a unit vector.")]
-        public Vector3D ThisWayRight { get => myWayRight; }
+        [Description("Which way is to the right of the center of the image. Always a unit vector.")]
+        public NewVector3D ThisWayRight { get => myWayRight; }
 
-        [Description("Which way is up in the image. " +
-            "When it is set, it is resized to a unit vector.")]
-        public Vector3D ThisWayUp { get => myWayUp; }
+        [Description("Which way is up in the image. Always a unit vector.")]
+        public NewVector3D ThisWayUp { get => myWayUp; }
 
         public void SetCamera(
-            Vector3D position,
-            Vector3D direction,
-            Vector3D thisWayUp)
+            NewPoint3D position,
+            NewVector3D direction,
+            NewVector3D thisWayUp)
         {
             if (direction.IsZero)
                 throw new ArgumentException(
@@ -87,11 +124,11 @@ namespace NullPointersEtc.TelevisionScreen
                 throw new ArgumentException(
                     nameof(thisWayUp) + " cannot be the zero vector.");
 
-            Vector3D unitDirection = direction.AsUnit();
+            NewVector3D unitDirection = direction.AsUnit();
 
-            Vector3D unitThisWayUp = thisWayUp.AsUnit();
+            NewVector3D unitThisWayUp = thisWayUp.AsUnit();
 
-            Vector3D orthogonalRight = unitDirection.Cross(unitThisWayUp);
+            NewVector3D orthogonalRight = unitDirection.Cross(unitThisWayUp);
 
             if (orthogonalRight.IsZero)
                 throw new ArgumentException(
@@ -99,79 +136,51 @@ namespace NullPointersEtc.TelevisionScreen
                     " cannot be parallel to " +
                     nameof(thisWayUp));
 
-            Vector3D unitRight = orthogonalRight.AsUnit();
+            NewVector3D unitRight = orthogonalRight.AsUnit();
 
-            Vector3D orthogonalUp = unitRight.Cross(unitDirection);
+            NewVector3D orthogonalUp = unitRight.Cross(unitDirection);
 
-            Vector3D unitUp = orthogonalUp.AsUnit();
+            NewVector3D unitUp = orthogonalUp.AsUnit();
 
+            myCamera = position;
             myWayForward = unitDirection;
             myWayRight = unitRight;
             myWayUp = unitUp;
             Invalidate();
         }
 
-        /// <summary>Rotation about the X axis, in radians.</summary>
-        public float RotationX { get; set; } = 0.4F;
-
-        /// <summary>Rotation about the Y axis, in radians.</summary>
-        public float RotationY { get; set; } = 0.6F;
-
-        /// <summary>Rotation about the Z axis, in radians.</summary>
-        public float RotationZ { get; set; } = 0.0F;
-
-        /// <summary>Uniform scale applied after projection, in pixels per world unit.</summary>
         public float DotsPerInch { get; set; } = 3.0F;
 
-        /// <summary>If true, uses simple perspective projection; otherwise orthographic.</summary>
         public bool UsePerspective { get; set; } = true;
 
-        /// <summary>
-        /// Focal length: the distance from the camera to the virtual projection
-        /// plane, used to DotsPerInch perspective projection. This is independent of
-        /// CameraPosition and mainly acts as a "zoom" control.
-        /// </summary>
-        public double CameraDistance { get; set; } = 400.0;
+        //public float CameraDistance { get; set; } = 400.0F;
 
-        /// <summary>If true, the mouse can be dragged over the control to rotate the scene.</summary>
-        public bool AllowMouseRotate { get; set; } = true;
+        private int _cameraPosition = 0;
 
-        private Point _lastMousePos;
-        private bool _dragging;
+        private readonly IList<Tuple<NewPoint3D, NewVector3D,
+            NewVector3D, NewVector3D>> _cameraPositions;
 
         private void TelevisionScreen_MouseDown(
             object? sender, MouseEventArgs e)
         {
-            if (!AllowMouseRotate) return;
-            _dragging = true;
-            _lastMousePos = e.Location;
         }
 
         private void TelevisionScreen_MouseMove(
             object? sender, MouseEventArgs e)
         {
-            if (!AllowMouseRotate || !_dragging) return;
-
-            int dx = e.Location.X - _lastMousePos.X;
-            int dy = e.Location.Y - _lastMousePos.Y;
-
-            // Dragging right yaws the object around the vertical (Z) axis;
-            // dragging down pitches it forward around the horizontal (X) axis.
-            RotationZ += dx * 0.01F;
-            RotationX += dy * 0.01F;
-
-            _lastMousePos = e.Location;
-            Invalidate();
         }
 
         private void TelevisionScreen_MouseUp(
             object? sender, MouseEventArgs e)
         {
-            _dragging = false;
+            ++_cameraPosition;
+            if (_cameraPosition == _cameraPositions.Count) _cameraPosition = 0;
 
-            SetCamera(position: new(x: 160.0F, y: -1000.0F, z: 1000.0F),
-                direction: new(x: 100.0F, y: 1000.0F, z: -1000.0F),
-                thisWayUp: myWayUp);
+            myCamera = _cameraPositions[_cameraPosition].Item1;
+            myWayForward = _cameraPositions[_cameraPosition].Item2;
+            myWayRight = _cameraPositions[_cameraPosition].Item3;
+            myWayUp = _cameraPositions[_cameraPosition].Item4;
+            Invalidate();
         }
 
         /// <summary>
@@ -179,52 +188,39 @@ namespace NullPointersEtc.TelevisionScreen
         /// applying the current object rotation, the camera transform, and the
         /// current scale/projection mode.
         /// </summary>
-        private PointF Project(Vector3D v)
+        private PointF Project(NewPoint3D v)
         {
-            // Apply object rotation (objects spin about the origin in world space).
-            Vector3D world = v.RotatedX(RotationX).RotatedY(RotationY).RotatedZ(RotationZ);
-
             // Transform into camera space: position relative to the eye,
             // expressed in terms of the camera's right/up/forward basis.
-            Vector3D relative = world.Minus(myCamera);
-            double camX = relative.Dot(myWayRight);
-            double camY = relative.Dot(myWayForward);
-            double camZ = relative.Dot(myWayUp);
+            NewVector3D relative = v.Minus(myCamera);
 
-            double px, pz;
+            float imageX = relative.Dot(myWayRight),
+                depthY = relative.Dot(myWayForward), imageZ = relative.Dot(myWayUp);
 
             if (UsePerspective)
             {
-                double depth = camY;
-                if (depth < 1.0) depth = 1.0; // avoid divide-by-zero / points behind the camera
-                double factor = CameraDistance / depth;
-                px = camX * factor;
-                pz = camZ * factor;
-            }
-            else
-            {
-                px = camX;
-                pz = camZ;
+                //imageX *= CameraDistance;
+                //imageZ *= CameraDistance;
+
+                //if (depthY > 1.0)
+                //{
+                //    imageX /= depthY;
+                //    imageZ /= depthY;
+                //}
             }
 
-            // Convert view-plane units to pixels. Camera-space +X is to the
-            // right (no flip needed); the vertical screen axis is flipped
-            // because pixel Y grows downward while camera-space +up does not.
-            float screenX = (float)(Width / 2.0 + px * DotsPerInch);
-            float screenY = (float)(Height / 2.0 - pz * DotsPerInch);
-
-            return new PointF(screenX, screenY);
+            return new PointF(
+                x: Width / 2.0F + imageX /* * DotsPerInch */,
+                y: Height / 2.0F - imageZ /* * DotsPerInch */);
         }
 
-        /// <summary>Camera-space depth of a face's vertices (averaged), used for simple painter's-algorithm sorting.</summary>
-        private double FaceDepth(Mesh3D mesh, int[] faceIndices)
+        [Description("Camera-space depth of a face's vertices (averaged), used for simple painter's-algorithm sorting.")]
+        private float FaceDepth(Mesh3D mesh, int[] faceIndices)
         {
-            double sum = 0;
+            float sum = 0;
             foreach (int idx in faceIndices)
             {
-                Vector3D world = mesh.Vertices[idx]
-                    .RotatedX(RotationX).RotatedY(RotationY).RotatedZ(RotationZ);
-                Vector3D relative = world.Minus(myCamera);
+                NewVector3D relative = mesh.Vertices[idx].Minus(myCamera);
                 sum += relative.Dot(myWayForward);
             }
             return sum / faceIndices.Length;
@@ -234,30 +230,23 @@ namespace NullPointersEtc.TelevisionScreen
         {
             base.OnPaint(e);
 
-            Triangle3D r1 = new Triangle3D(
-                first: new Vector3D(-100, 100, 0),
-                second: new Vector3D(100, 100, 0),
-                third: new Vector3D(0, 300, 0),
-                color: Color.Red);
-
-            Trace.WriteLine(category: "Triangle starts at lower left: X", value: r1.First.X);
-            Trace.WriteLine(category: "Triangle starts at lower left: Y", value: r1.First.Y);
-            Trace.WriteLine(category: "Triangle starts at lower left: Z", value: r1.First.Z);
-            Trace.WriteLine(category: "Triangle continues at lower right: X", value: r1.Second.X);
-            Trace.WriteLine(category: "Triangle continues at lower right: Y", value: r1.Second.Y);
-            Trace.WriteLine(category: "Triangle continues at lower right: Z", value: r1.Second.Z);
-            Trace.WriteLine(category: "Triangle ends at top center: X", value: r1.Third.X);
-            Trace.WriteLine(category: "Triangle ends at top center: Y", value: r1.Third.Y);
-            Trace.WriteLine(category: "Triangle ends at top center", value: r1.Third.Z);
-            Trace.WriteLine(category: "Triangle should be facing up; normal should have x=0 and y=0 and z positive: X", value: r1.Front.X);
-            Trace.WriteLine(category: "Triangle should be facing up; normal should have x=0 and y=0 and z positive: Y", value: r1.Front.Y);
-            Trace.WriteLine(category: "Triangle should be facing up; normal should have x=0 and y=0 and z positive", value: r1.Front.Z);
-
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.Clear(BackColor);
 
             foreach (Mesh3D mesh in Objects)
             {
+                foreach (Triangle3D tri in mesh.Triangles)
+                {
+                    if (tri.Front.Dot(myWayForward) > 0)
+                    {
+                        using (var brush = new SolidBrush(tri.Color))
+                        {
+                            e.Graphics.FillPolygon(brush,
+                                [Project(tri.First), Project(tri.Second), Project(tri.Third)]);
+                        }
+                    }
+                }
+
                 if (mesh.DrawFaces && mesh.Faces.Count > 0)
                 {
                     // Painter's algorithm: draw faces furthest from the camera first.
@@ -292,99 +281,172 @@ namespace NullPointersEtc.TelevisionScreen
         }
     }
 
-
-    [Description("A simple point in 3D space.")]
-    public readonly struct Vector3D(
-        [Description("Positive x is to the right of the origin. " +
-        "Negative x is to the left of the origin.")]
-        float x,
-        [Description("Positive y is farther away from the viewer than the origin. "+
-        "Negative y is nearer to the viewer than the origin.")]
-        float y,
-        [Description("Positive z is above the XY plane. " +
-        "Negative z is below the XY plane.")]
-        float z)
-        : IEquatable<Vector3D>
+#pragma warning disable CS0659, IDE0290
+    [Description("A simple vector in 3D space.")]
+    public class NewVector3D
     {
-        public readonly float X => xx;
-        public readonly double Y => yy;
-        public readonly double Z => zz;
+        public NewVector3D(
+            [Description("Positive x is to the right of the origin. " +
+                "Negative x is to the left of the origin.")]
+            float x,
+            [Description("Positive y is farther away from the viewer than the origin. "+
+                "Negative y is nearer to the viewer than the origin.")]
+            float y,
+            [Description("Positive z is above the XY plane. " +
+                "Negative z is below the XY plane.")]
+            float z)
+        {
+            xx = x;
+            yy = y;
+            zz = z;
+        }
 
-        public readonly bool Equals(Vector3D that) =>
+        public float X { get => xx; }
+        public float Y { get => yy; }
+        public float Z { get => zz; }
+        public bool IsZero => xx == 0.0F && yy == 0.0F && zz == 0.0F;
+        public float Length =>
+            MathF.Sqrt(xx * xx + yy * yy + zz * zz);
+
+        public bool Equals(NewVector3D that) =>
             this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
 
-        public override readonly bool Equals(object? obj) =>
-            obj is Vector3D that
+        public override bool Equals(object? obj) =>
+            obj is NewVector3D that
             && this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
 
-        public override readonly int GetHashCode() =>
-            HashCode.Combine(xx, yy, zz);
+        public override string ToString() =>
+            "[" + nameof(X) + ":" + xx.ToString() + ", " +
+            nameof(Y) + ":" + yy.ToString() + ", " +
+            nameof(Z) + ":" + zz.ToString() + "]";
 
-        public readonly Vector3D Negate() =>
-            new Vector3D(x: -xx, y: -yy, z: -zz);
+        public NewVector3D Negate() => new(x: -xx, y: -yy, z: -zz);
 
-        public readonly Vector3D Plus(Vector3D that) =>
+        public NewVector3D Plus(NewVector3D that) =>
             new(x: xx + that.xx, y: yy + that.yy, z: zz + that.zz);
 
-        public readonly Vector3D Minus(Vector3D that) =>
+        public NewVector3D Minus(NewVector3D that) =>
             new(x: xx - that.xx, y: yy - that.yy, z: zz - that.zz);
 
-        public readonly Vector3D Times(float that) =>
+        public NewVector3D Times(float that) =>
             new(x: xx * that, y: yy * that, z: zz * that);
 
         [Description("Rotate this point about the X axis by the given angle (radians).")]
-        public Vector3D RotatedX(float radians)
+        public NewVector3D RotatedX(float radians)
         {
             float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
-            return new Vector3D(xx, yy * cos - zz * sin, yy * sin + zz * cos);
+            return new NewVector3D(xx, yy * cos - zz * sin, yy * sin + zz * cos);
         }
 
         [Description("Rotate this point about the Y axis by the given angle (radians).")]
-        public Vector3D RotatedY(float radians)
+        public NewVector3D RotatedY(float radians)
         {
             float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
-            return new Vector3D(xx * cos + zz * sin, yy, -xx * sin + zz * cos);
+            return new NewVector3D(xx * cos + zz * sin, yy, -xx * sin + zz * cos);
         }
 
         [Description("Rotate this point about the Z axis by the given angle (radians).")]
-        public Vector3D RotatedZ(float radians)
+        public NewVector3D NewRotatedZ(float radians)
         {
             float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
-            return new Vector3D(xx * cos - yy * sin, xx * sin + yy * cos, zz);
+            return new NewVector3D(xx * cos - yy * sin, xx * sin + yy * cos, zz);
         }
 
-        public readonly double Dot(Vector3D that) =>
+        public float Dot(NewVector3D that) =>
             xx * that.xx + yy * that.yy + zz * that.zz;
 
-        public readonly Vector3D Cross(Vector3D that) =>
+        public NewVector3D Cross(NewVector3D that) =>
             new(x: yy * that.zz - zz * that.yy,
             y: zz * that.xx - xx * that.zz,
             z: xx * that.yy - yy * that.xx);
 
-        public readonly bool IsZero =>
-            xx == 0.0F && yy == 0.0F && zz == 0.0F;
-
-        public float Length =>
-            MathF.Sqrt(xx * xx + yy * yy + zz * zz);
-
         [Description("A unit vector in the same direction as this vector")]
-        public Vector3D AsUnit() =>
-            !IsZero ? Times(1.0F / Length)
-                : throw new DivideByZeroException(
-                    nameof(AsUnit) + " can be called only if IsZero is false");
+        public NewVector3D AsUnit() => IsZero ?
+            throw new DivideByZeroException(
+                    nameof(AsUnit) + " can be called only if IsZero is false")
+            : this.Times(1.0F / Length);
 
-        private readonly float xx = x, yy = y, zz = z;
+        private readonly float xx, yy, zz;
+    }
+
+#pragma warning disable CS0659, IDE0290
+    [Description("A simple point in 3D space.")]
+    public class NewPoint3D
+    {
+        public NewPoint3D(
+            [Description("Positive x is to the right of the origin. " +
+                "Negative x is to the left of the origin.")]
+            float x,
+            [Description("Positive y is farther away from the viewer than the origin. "+
+                "Negative y is nearer to the viewer than the origin.")]
+            float y,
+            [Description("Positive z is above the XY plane. " +
+                "Negative z is below the XY plane.")]
+            float z)
+        {
+            xx = x;
+            yy = y;
+            zz = z;
+        }
+
+        public float X { get => xx; }
+        public float Y { get => yy; }
+        public float Z { get => zz; }
+
+        public bool Equals(NewPoint3D that) =>
+            this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
+
+        public override bool Equals(object? obj) =>
+            obj is NewPoint3D that
+            && this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
+
+        public override string ToString() =>
+            "(" + nameof(X) + ":" + xx.ToString() + ", " +
+            nameof(Y) + ":" + yy.ToString() + ", " +
+            nameof(Z) + ":" + zz.ToString() + ")";
+
+        public NewPoint3D Plus(NewVector3D that) =>
+            new(x: xx + that.X, y: yy + that.Y, z: zz + that.Z);
+
+        public NewPoint3D Minus(NewVector3D that) =>
+            new(x: xx - that.X, y: yy - that.Y, z: zz - that.Z);
+
+        public NewVector3D Minus(NewPoint3D that) =>
+            new(x: xx - that.xx, y: yy - that.yy, z: zz - that.zz);
+
+        [Description("Rotate this point about the X axis by the given angle (radians).")]
+        public NewPoint3D RotatedX(float radians)
+        {
+            float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
+            return new(xx, yy * cos - zz * sin, yy * sin + zz * cos);
+        }
+
+        [Description("Rotate this point about the Y axis by the given angle (radians).")]
+        public NewPoint3D RotatedY(float radians)
+        {
+            float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
+            return new(xx * cos + zz * sin, yy, -xx * sin + zz * cos);
+        }
+
+        [Description("Rotate this point about the Z axis by the given angle (radians).")]
+        public NewPoint3D RotatedZ(float radians)
+        {
+            float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
+            return new(xx * cos - yy * sin, xx * sin + yy * cos, zz);
+        }
+
+        private readonly float xx, yy, zz;
     }
 
     public readonly struct Triangle3D
     {
         public Triangle3D(
-            Vector3D first,
-            Vector3D second,
-            Vector3D third,
+            NewPoint3D first,
+            NewPoint3D second,
+            NewPoint3D third,
             System.Drawing.Color color)
         {
-            Vector3D front = third.Minus(second)
+            NewVector3D front = third.Minus(second)
                 .Cross(first.Minus(second));
 
             if (front.IsZero)
@@ -399,17 +461,17 @@ namespace NullPointersEtc.TelevisionScreen
             myFront = front.AsUnit();
         }
 
-        public Vector3D First { get => myFirst; }
-        public Vector3D Second { get => mySecond; }
-        public Vector3D Third { get => myThird; }
-        public Vector3D Front { get => myFront; }
+        public NewPoint3D First { get => myFirst; }
+        public NewPoint3D Second { get => mySecond; }
+        public NewPoint3D Third { get => myThird; }
+        public NewVector3D Front { get => myFront; }
 
         public System.Drawing.Color Color { get => myColor; }
 
-        private readonly Vector3D myFirst;
-        private readonly Vector3D mySecond;
-        private readonly Vector3D myThird;
-        private readonly Vector3D myFront;
+        private readonly NewPoint3D myFirst;
+        private readonly NewPoint3D mySecond;
+        private readonly NewPoint3D myThird;
+        private readonly NewVector3D myFront;
         private readonly System.Drawing.Color myColor;
     }
 
@@ -420,9 +482,10 @@ namespace NullPointersEtc.TelevisionScreen
     /// </summary>
     public class Mesh3D
     {
-        public List<Vector3D> Vertices { get; } = new List<Vector3D>();
+        public IList<Triangle3D> Triangles { get; } = new List<Triangle3D>();
+        public IList<NewPoint3D> Vertices { get; } = new List<NewPoint3D>();
         public List<Tuple<int, int>> Edges { get; } = new List<Tuple<int, int>>();
-        public List<int[]> Faces { get; } = new List<int[]>();
+        public IList<int[]> Faces { get; } = new List<int[]>();
         public Color EdgeColor { get; set; } = Color.Lime;
         public Color FaceColor { get; set; } = Color.FromArgb(80, Color.Lime);
         public bool DrawFaces { get; set; } = false;
@@ -434,6 +497,53 @@ namespace NullPointersEtc.TelevisionScreen
             float h = (float)(size / 2.0);
             var mesh = new Mesh3D();
 
+            /*
+             *     6__________7
+             *    /|         /|
+             *   / |        / |
+             *  /  |       /  |
+             * 5__________8   |
+             * |   |      |   |
+             * |   |      |   |
+             * |   2______|___3
+             * |  /       |  /
+             * | /        | /
+             * |/         |/
+             * 1__________4
+             */
+
+            NewPoint3D point1 = new(x: -h, y: -h, z: 0);
+            NewPoint3D point2 = new(x: -h, y: h, z: 0);
+            NewPoint3D point3 = new(x: h, y: h, z: 0);
+            NewPoint3D point4 = new(x: h, y: -h, z: 0);
+
+            NewPoint3D point5 = new(x: -h, y: -h, z: h + h);
+            NewPoint3D point6 = new(x: -h, y: h, z: h + h);
+            NewPoint3D point7 = new(x: h, y: h, z: h + h);
+            NewPoint3D point8 = new(x: h, y: -h, z: h + h);
+
+            mesh.Triangles.Add(new Triangle3D(
+                first: point1, second: point4, third: point2,
+                color: Color.Red));
+
+            mesh.Triangles.Add(new Triangle3D(
+                first: point3, second: point2, third: point4,
+                color: Color.Chartreuse));
+
+            mesh.Triangles.Add(new Triangle3D(
+                first: point4, second: point8, third: point7,
+                color: Color.Beige));
+
+            mesh.Triangles.Add(new Triangle3D(
+                first: point7, second: point3, third: point4,
+                color: Color.DarkGoldenrod));
+
+            Trace.WriteLine("Triangle 1: " + mesh.Triangles[0].First);
+            Trace.WriteLine("Triangle 2: " + mesh.Triangles[0].Second);
+            Trace.WriteLine("Triangle 3: " + mesh.Triangles[0].Third);
+            Trace.WriteLine("Triangle Front: " + mesh.Triangles[0].Front);
+
+
             if (color.HasValue)
             {
                 mesh.EdgeColor = color.Value;
@@ -441,17 +551,15 @@ namespace NullPointersEtc.TelevisionScreen
             }
 
             // 8 corners of the cube.
-            mesh.Vertices.AddRange(new[]
-            {
-                new Vector3D(-h, -h, -h), // 0
-                new Vector3D( h, -h, -h), // 1
-                new Vector3D( h,  h, -h), // 2
-                new Vector3D(-h,  h, -h), // 3
-                new Vector3D(-h, -h,  h), // 4
-                new Vector3D( h, -h,  h), // 5
-                new Vector3D( h,  h,  h), // 6
-                new Vector3D(-h,  h,  h), // 7
-            });
+            mesh.Vertices.Add(item: new NewPoint3D(x: -h, y: -h, z: -h)); // 0
+            mesh.Vertices.Add(item: new NewPoint3D(x: h, y: -h, z: -h)); // 1
+            mesh.Vertices.Add(item: new NewPoint3D(x: h, y: h, z: -h)); // 2
+            mesh.Vertices.Add(item: new NewPoint3D(x: -h, y: h, z: -h)); // 3
+            mesh.Vertices.Add(item: new NewPoint3D(x: -h, y: -h, z: h)); // 4
+            mesh.Vertices.Add(item: new NewPoint3D(x: h, y: -h, z: h)); // 5
+            mesh.Vertices.Add(item: new NewPoint3D(x: h, y: h, z: h)); // 6
+            mesh.Vertices.Add(item: new NewPoint3D(x: -h, y: h, z: h)); // 7
+
             int[,] edgeIndices =
             {
                 {0,1},{1,2},{2,3},{3,0}, // back face
