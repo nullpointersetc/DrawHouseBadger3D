@@ -30,19 +30,21 @@ namespace NullPointersEtc.TelevisionScreen
     /// </summary>
     public class TelevisionScreen : UserControl
     {
-        private NewPoint3D myCamera;
-        private NewVector3D myWayForward;
-        private NewVector3D myWayRight;
-        private NewVector3D myWayUp;
+        private Point3DF myCamera;
+        private Vector3DF myWayForward;
+        private Vector3DF myWayRight;
+        private Vector3DF myWayUp;
 
         public TelevisionScreen()
         {
-            myCamera = new(x: 0.0F, y: -400.0F, z: 400.0F);
+            int x1 = 0, y1 = -400, z1 = 400;
+            myCamera = new(x: x1, y: y1, z: z1);
 
-            NewPoint3D origin = new(x: 0.0F, y: 0.0F, z: 0.0F);
+            Point3DF origin = new(x: 0.0F, y: 0.0F, z: 0.0F);
             myWayForward = origin.Minus(myCamera).AsUnit();
+            myCameraDistance = origin.Minus(myCamera).Length;
 
-            NewVector3D tempUp = new NewVector3D(x: myWayForward.X,
+            Vector3DF tempUp = new Vector3DF(x: myWayForward.X,
                 y: myWayForward.Y, z: -myWayForward.Z);
 
             myWayRight = myWayForward.Cross(tempUp).AsUnit();
@@ -52,34 +54,84 @@ namespace NullPointersEtc.TelevisionScreen
             _cameraPosition = 0;
 
             _cameraPositions =
-                new List<Tuple<NewPoint3D, NewVector3D, NewVector3D, NewVector3D>>();
+                new List<Tuple<Point3DF, Vector3DF, Vector3DF, Vector3DF>>();
 
             _cameraPositions.Add(Tuple.Create(myCamera, myWayForward, myWayRight, myWayUp));
 
-            for (int x1 = 40; x1 <= 400; x1 += 40)
+            while (y1 < 0)
             {
-                NewPoint3D _cameraPosition1 = new(x: x1, y: -400.0F, z: 400.0F);
-                NewVector3D _cameraForward1 = origin.Minus(_cameraPosition1).AsUnit();
-                NewVector3D _cameraUp1 = new NewVector3D(x: _cameraForward1.X,
+                x1 += 80;
+                y1 += 80;
+                Point3DF _cameraPosition1 = new(x: x1, y: y1, z: z1);
+                Vector3DF _cameraForward1 = origin.Minus(_cameraPosition1).AsUnit();
+                Vector3DF _cameraUp1 = new(x: _cameraForward1.X,
                     y: _cameraForward1.Y, z: -_cameraForward1.Z);
-                NewVector3D _cameraRight1 = _cameraForward1.Cross(_cameraUp1).AsUnit();
-                NewVector3D _cameraUp2 = _cameraRight1.Cross(_cameraForward1).AsUnit();
+                Vector3DF _cameraRight1 = _cameraForward1.Cross(_cameraUp1).AsUnit();
+                Vector3DF _cameraUp2 = _cameraRight1.Cross(_cameraForward1).AsUnit();
 
                 _cameraPositions.Add(Tuple.Create(_cameraPosition1,
-                    _cameraForward1, _cameraRight1, _cameraUp1));
+                    _cameraForward1, _cameraRight1, _cameraUp2));
             }
 
-            for (int y1 = -360; y1 <= -280; y1 += 10)
+            while (x1 > 0)
             {
-                NewPoint3D _cameraPosition1 = new(x: 400.0F, y: y1, z: 400.0F);
-                NewVector3D _cameraForward1 = origin.Minus(_cameraPosition1).AsUnit();
-                NewVector3D _cameraUp1 = new NewVector3D(x: _cameraForward1.X,
+                x1 -= 80;
+                y1 += 80;
+                Point3DF _cameraPosition1 = new(x: x1, y: y1, z: z1);
+                Vector3DF _cameraForward1 = origin.Minus(_cameraPosition1).AsUnit();
+                Vector3DF _cameraUp1 = new(x: _cameraForward1.X,
                     y: _cameraForward1.Y, z: -_cameraForward1.Z);
-                NewVector3D _cameraRight1 = _cameraForward1.Cross(_cameraUp1).AsUnit();
-                NewVector3D _cameraUp2 = _cameraRight1.Cross(_cameraForward1).AsUnit();
+                Vector3DF _cameraRight1 = _cameraForward1.Cross(_cameraUp1).AsUnit();
+                Vector3DF _cameraUp2 = _cameraRight1.Cross(_cameraForward1).AsUnit();
 
                 _cameraPositions.Add(Tuple.Create(_cameraPosition1,
-                    _cameraForward1, _cameraRight1, _cameraUp1));
+                    _cameraForward1, _cameraRight1, _cameraUp2));
+            }
+
+            while (y1 > 0)
+            {
+                x1 -= 80;
+                y1 -= 80;
+                Point3DF _cameraPosition1 = new(x: x1, y: y1, z: z1);
+                Vector3DF _cameraForward1 = origin.Minus(_cameraPosition1).AsUnit();
+                Vector3DF _cameraUp1 = new(x: _cameraForward1.X,
+                    y: _cameraForward1.Y, z: -_cameraForward1.Z);
+                Vector3DF _cameraRight1 = _cameraForward1.Cross(_cameraUp1).AsUnit();
+                Vector3DF _cameraUp2 = _cameraRight1.Cross(_cameraForward1).AsUnit();
+
+                _cameraPositions.Add(Tuple.Create(_cameraPosition1,
+                    _cameraForward1, _cameraRight1, _cameraUp2));
+            }
+
+            while (x1 < 0)
+            {
+                x1 += 80;
+                y1 -= 80;
+                Point3DF _cameraPosition1 = new(x: x1, y: y1, z: z1);
+                Vector3DF _cameraForward1 = origin.Minus(_cameraPosition1).AsUnit();
+                Vector3DF _cameraUp1 = new(x: _cameraForward1.X,
+                    y: _cameraForward1.Y, z: -_cameraForward1.Z);
+                Vector3DF _cameraRight1 = _cameraForward1.Cross(_cameraUp1).AsUnit();
+                Vector3DF _cameraUp2 = _cameraRight1.Cross(_cameraForward1).AsUnit();
+
+                _cameraPositions.Add(Tuple.Create(_cameraPosition1,
+                    _cameraForward1, _cameraRight1, _cameraUp2));
+            }
+
+            int i2 = _cameraPositions.Count;
+            for (int i1 = 0; i1 < i2; ++i1)
+            {
+                Point3DF _cameraPosition1 = _cameraPositions[i1].Item1;
+                Point3DF _cameraPosition3 = new(x: _cameraPosition1.X,
+                    y: _cameraPosition1.Y, z: -_cameraPosition1.Z);
+                Vector3DF _cameraForward3 = origin.Minus(_cameraPosition3).AsUnit();
+                Vector3DF _cameraUp3 = new(x: _cameraForward3.X,
+                    y: _cameraForward3.Y, z: _cameraForward3.Z + 100);
+                Vector3DF _cameraRight3 = _cameraForward3.Cross(_cameraUp3).AsUnit();
+                Vector3DF _cameraUp4 = _cameraRight3.Cross(_cameraForward3).AsUnit();
+
+                _cameraPositions.Add(Tuple.Create(_cameraPosition3,
+                    _cameraForward3, _cameraRight3, _cameraUp4));
             }
 
             SetStyle(ControlStyles.AllPaintingInWmPaint
@@ -89,32 +141,27 @@ namespace NullPointersEtc.TelevisionScreen
 
             BackColor = Color.Black;
 
-            MouseDown += TelevisionScreen_MouseDown;
-            MouseMove += TelevisionScreen_MouseMove;
             MouseUp += TelevisionScreen_MouseUp;
-
-            // Demo content so the control shows something useful out of the box.
-            Objects.Add(Mesh3D.CreateCube(100, Color.Cyan));
         }
 
-        public List<Mesh3D> Objects { get; } = new List<Mesh3D>();
+        public List<Object3DF> Objects { get; } = new List<Object3DF>();
 
         [Description("Where the camera sits in world space.")]
-        public NewPoint3D CameraPosition { get => myCamera; }
+        public Point3DF CameraPosition { get => myCamera; }
 
         [Description("Where the camera is pointing. Always a unit vector.")]
-        public NewVector3D CameraDirection { get => myWayForward; }
+        public Vector3DF CameraDirection { get => myWayForward; }
 
         [Description("Which way is to the right of the center of the image. Always a unit vector.")]
-        public NewVector3D ThisWayRight { get => myWayRight; }
+        public Vector3DF ThisWayRight { get => myWayRight; }
 
         [Description("Which way is up in the image. Always a unit vector.")]
-        public NewVector3D ThisWayUp { get => myWayUp; }
+        public Vector3DF ThisWayUp { get => myWayUp; }
 
         public void SetCamera(
-            NewPoint3D position,
-            NewVector3D direction,
-            NewVector3D thisWayUp)
+            Point3DF position,
+            Vector3DF direction,
+            Vector3DF thisWayUp)
         {
             if (direction.IsZero)
                 throw new ArgumentException(
@@ -124,11 +171,13 @@ namespace NullPointersEtc.TelevisionScreen
                 throw new ArgumentException(
                     nameof(thisWayUp) + " cannot be the zero vector.");
 
-            NewVector3D unitDirection = direction.AsUnit();
+            float newCameraDistance = direction.Length;
 
-            NewVector3D unitThisWayUp = thisWayUp.AsUnit();
+            Vector3DF unitDirection = direction.AsUnit();
 
-            NewVector3D orthogonalRight = unitDirection.Cross(unitThisWayUp);
+            Vector3DF unitThisWayUp = thisWayUp.AsUnit();
+
+            Vector3DF orthogonalRight = unitDirection.Cross(unitThisWayUp);
 
             if (orthogonalRight.IsZero)
                 throw new ArgumentException(
@@ -136,39 +185,43 @@ namespace NullPointersEtc.TelevisionScreen
                     " cannot be parallel to " +
                     nameof(thisWayUp));
 
-            NewVector3D unitRight = orthogonalRight.AsUnit();
+            Vector3DF unitRight = orthogonalRight.AsUnit();
 
-            NewVector3D orthogonalUp = unitRight.Cross(unitDirection);
+            Vector3DF orthogonalUp = unitRight.Cross(unitDirection);
 
-            NewVector3D unitUp = orthogonalUp.AsUnit();
+            Vector3DF unitUp = orthogonalUp.AsUnit();
 
             myCamera = position;
             myWayForward = unitDirection;
             myWayRight = unitRight;
             myWayUp = unitUp;
+            myCameraDistance = newCameraDistance;
             Invalidate();
         }
 
-        public float DotsPerInch { get; set; } = 3.0F;
+        public float DotsPerInch { get; set; } = 1.0F;
 
-        public bool UsePerspective { get; set; } = true;
+        public bool UsePerspective
+        {
+            get => myUsingPerspective;
+            set => myUsingPerspective = value;
+        }
+        public bool UseOrthogonal
+        {
+            get => !myUsingPerspective;
+            set => myUsingPerspective = !value;
+        }
 
-        //public float CameraDistance { get; set; } = 400.0F;
+        private bool myUsingPerspective = true;
+
+        public float CameraDistance { get => myCameraDistance; }
+
+        private float myCameraDistance;
 
         private int _cameraPosition = 0;
 
-        private readonly IList<Tuple<NewPoint3D, NewVector3D,
-            NewVector3D, NewVector3D>> _cameraPositions;
-
-        private void TelevisionScreen_MouseDown(
-            object? sender, MouseEventArgs e)
-        {
-        }
-
-        private void TelevisionScreen_MouseMove(
-            object? sender, MouseEventArgs e)
-        {
-        }
+        private readonly IList<Tuple<Point3DF, Vector3DF,
+            Vector3DF, Vector3DF>> _cameraPositions;
 
         private void TelevisionScreen_MouseUp(
             object? sender, MouseEventArgs e)
@@ -188,54 +241,43 @@ namespace NullPointersEtc.TelevisionScreen
         /// applying the current object rotation, the camera transform, and the
         /// current scale/projection mode.
         /// </summary>
-        private PointF Project(NewPoint3D v)
+        private PointF Project(Point3DF v)
         {
             // Transform into camera space: position relative to the eye,
             // expressed in terms of the camera's right/up/forward basis.
-            NewVector3D relative = v.Minus(myCamera);
+            Vector3DF relative = v.Minus(myCamera);
 
             float imageX = relative.Dot(myWayRight),
                 depthY = relative.Dot(myWayForward), imageZ = relative.Dot(myWayUp);
 
-            if (UsePerspective)
+            if (myUsingPerspective)
             {
-                //imageX *= CameraDistance;
-                //imageZ *= CameraDistance;
+                imageX *= myCameraDistance;
+                imageZ *= myCameraDistance;
 
-                //if (depthY > 1.0)
-                //{
-                //    imageX /= depthY;
-                //    imageZ /= depthY;
-                //}
+                if (depthY > 1.0)
+                {
+                    imageX /= depthY;
+                    imageZ /= depthY;
+                }
             }
 
             return new PointF(
-                x: Width / 2.0F + imageX /* * DotsPerInch */,
-                y: Height / 2.0F - imageZ /* * DotsPerInch */);
+                x: Width / 2.0F + imageX * DotsPerInch,
+                y: Height / 2.0F - imageZ * DotsPerInch);
         }
 
-        [Description("Camera-space depth of a face's vertices (averaged), used for simple painter's-algorithm sorting.")]
-        private float FaceDepth(Mesh3D mesh, int[] faceIndices)
-        {
-            float sum = 0;
-            foreach (int idx in faceIndices)
-            {
-                NewVector3D relative = mesh.Vertices[idx].Minus(myCamera);
-                sum += relative.Dot(myWayForward);
-            }
-            return sum / faceIndices.Length;
-        }
 
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
 
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            e.Graphics.SmoothingMode = SmoothingMode.None;
             e.Graphics.Clear(BackColor);
 
-            foreach (Mesh3D mesh in Objects)
+            foreach (Object3DF mesh in Objects)
             {
-                foreach (Triangle3D tri in mesh.Triangles)
+                foreach (Triangle3DF tri in mesh.Triangles)
                 {
                     if (tri.Front.Dot(myWayForward) > 0)
                     {
@@ -246,46 +288,15 @@ namespace NullPointersEtc.TelevisionScreen
                         }
                     }
                 }
-
-                if (mesh.DrawFaces && mesh.Faces.Count > 0)
-                {
-                    // Painter's algorithm: draw faces furthest from the camera first.
-                    var orderedFaces = mesh.Faces
-                        .OrderByDescending(f => FaceDepth(mesh, f));
-
-                    using (var faceBrush = new SolidBrush(mesh.FaceColor))
-                    using (var facePen = new Pen(mesh.EdgeColor))
-                    {
-                        foreach (int[] face in orderedFaces)
-                        {
-                            PointF[] pts = face.Select(idx => Project(mesh.Vertices[idx])).ToArray();
-                            e.Graphics.FillPolygon(faceBrush, pts);
-                            if (mesh.DrawEdges)
-                                e.Graphics.DrawPolygon(facePen, pts);
-                        }
-                    }
-                }
-                else if (mesh.DrawEdges)
-                {
-                    using (var pen = new Pen(mesh.EdgeColor, 1.5f))
-                    {
-                        foreach (var edge in mesh.Edges)
-                        {
-                            PointF p1 = Project(mesh.Vertices[edge.Item1]);
-                            PointF p2 = Project(mesh.Vertices[edge.Item2]);
-                            e.Graphics.DrawLine(pen, p1, p2);
-                        }
-                    }
-                }
             }
         }
     }
 
 #pragma warning disable CS0659, IDE0290
     [Description("A simple vector in 3D space.")]
-    public class NewVector3D
+    public class Vector3DF
     {
-        public NewVector3D(
+        public Vector3DF(
             [Description("Positive x is to the right of the origin. " +
                 "Negative x is to the left of the origin.")]
             float x,
@@ -308,11 +319,11 @@ namespace NullPointersEtc.TelevisionScreen
         public float Length =>
             MathF.Sqrt(xx * xx + yy * yy + zz * zz);
 
-        public bool Equals(NewVector3D that) =>
+        public bool Equals(Vector3DF that) =>
             this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
 
         public override bool Equals(object? obj) =>
-            obj is NewVector3D that
+            obj is Vector3DF that
             && this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
 
         public override string ToString() =>
@@ -320,48 +331,27 @@ namespace NullPointersEtc.TelevisionScreen
             nameof(Y) + ":" + yy.ToString() + ", " +
             nameof(Z) + ":" + zz.ToString() + "]";
 
-        public NewVector3D Negate() => new(x: -xx, y: -yy, z: -zz);
+        public Vector3DF Negate() => new(x: -xx, y: -yy, z: -zz);
 
-        public NewVector3D Plus(NewVector3D that) =>
+        public Vector3DF Plus(Vector3DF that) =>
             new(x: xx + that.xx, y: yy + that.yy, z: zz + that.zz);
 
-        public NewVector3D Minus(NewVector3D that) =>
+        public Vector3DF Minus(Vector3DF that) =>
             new(x: xx - that.xx, y: yy - that.yy, z: zz - that.zz);
 
-        public NewVector3D Times(float that) =>
+        public Vector3DF Times(float that) =>
             new(x: xx * that, y: yy * that, z: zz * that);
 
-        [Description("Rotate this point about the X axis by the given angle (radians).")]
-        public NewVector3D RotatedX(float radians)
-        {
-            float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
-            return new NewVector3D(xx, yy * cos - zz * sin, yy * sin + zz * cos);
-        }
-
-        [Description("Rotate this point about the Y axis by the given angle (radians).")]
-        public NewVector3D RotatedY(float radians)
-        {
-            float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
-            return new NewVector3D(xx * cos + zz * sin, yy, -xx * sin + zz * cos);
-        }
-
-        [Description("Rotate this point about the Z axis by the given angle (radians).")]
-        public NewVector3D NewRotatedZ(float radians)
-        {
-            float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
-            return new NewVector3D(xx * cos - yy * sin, xx * sin + yy * cos, zz);
-        }
-
-        public float Dot(NewVector3D that) =>
+        public float Dot(Vector3DF that) =>
             xx * that.xx + yy * that.yy + zz * that.zz;
 
-        public NewVector3D Cross(NewVector3D that) =>
+        public Vector3DF Cross(Vector3DF that) =>
             new(x: yy * that.zz - zz * that.yy,
             y: zz * that.xx - xx * that.zz,
             z: xx * that.yy - yy * that.xx);
 
         [Description("A unit vector in the same direction as this vector")]
-        public NewVector3D AsUnit() => IsZero ?
+        public Vector3DF AsUnit() => IsZero ?
             throw new DivideByZeroException(
                     nameof(AsUnit) + " can be called only if IsZero is false")
             : this.Times(1.0F / Length);
@@ -371,9 +361,9 @@ namespace NullPointersEtc.TelevisionScreen
 
 #pragma warning disable CS0659, IDE0290
     [Description("A simple point in 3D space.")]
-    public class NewPoint3D
+    public class Point3DF
     {
-        public NewPoint3D(
+        public Point3DF(
             [Description("Positive x is to the right of the origin. " +
                 "Negative x is to the left of the origin.")]
             float x,
@@ -393,11 +383,11 @@ namespace NullPointersEtc.TelevisionScreen
         public float Y { get => yy; }
         public float Z { get => zz; }
 
-        public bool Equals(NewPoint3D that) =>
+        public bool Equals(Point3DF that) =>
             this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
 
         public override bool Equals(object? obj) =>
-            obj is NewPoint3D that
+            obj is Point3DF that
             && this.xx == that.xx && this.yy == that.yy && this.zz == that.zz;
 
         public override string ToString() =>
@@ -405,31 +395,31 @@ namespace NullPointersEtc.TelevisionScreen
             nameof(Y) + ":" + yy.ToString() + ", " +
             nameof(Z) + ":" + zz.ToString() + ")";
 
-        public NewPoint3D Plus(NewVector3D that) =>
+        public Point3DF Plus(Vector3DF that) =>
             new(x: xx + that.X, y: yy + that.Y, z: zz + that.Z);
 
-        public NewPoint3D Minus(NewVector3D that) =>
+        public Point3DF Minus(Vector3DF that) =>
             new(x: xx - that.X, y: yy - that.Y, z: zz - that.Z);
 
-        public NewVector3D Minus(NewPoint3D that) =>
+        public Vector3DF Minus(Point3DF that) =>
             new(x: xx - that.xx, y: yy - that.yy, z: zz - that.zz);
 
         [Description("Rotate this point about the X axis by the given angle (radians).")]
-        public NewPoint3D RotatedX(float radians)
+        public Point3DF RotatedX(float radians)
         {
             float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
             return new(xx, yy * cos - zz * sin, yy * sin + zz * cos);
         }
 
         [Description("Rotate this point about the Y axis by the given angle (radians).")]
-        public NewPoint3D RotatedY(float radians)
+        public Point3DF RotatedY(float radians)
         {
             float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
             return new(xx * cos + zz * sin, yy, -xx * sin + zz * cos);
         }
 
         [Description("Rotate this point about the Z axis by the given angle (radians).")]
-        public NewPoint3D RotatedZ(float radians)
+        public Point3DF RotatedZ(float radians)
         {
             float cos = MathF.Cos(radians), sin = MathF.Sin(radians);
             return new(xx * cos - yy * sin, xx * sin + yy * cos, zz);
@@ -438,15 +428,15 @@ namespace NullPointersEtc.TelevisionScreen
         private readonly float xx, yy, zz;
     }
 
-    public readonly struct Triangle3D
+    public readonly struct Triangle3DF
     {
-        public Triangle3D(
-            NewPoint3D first,
-            NewPoint3D second,
-            NewPoint3D third,
+        public Triangle3DF(
+            Point3DF first,
+            Point3DF second,
+            Point3DF third,
             System.Drawing.Color color)
         {
-            NewVector3D front = third.Minus(second)
+            Vector3DF front = third.Minus(second)
                 .Cross(first.Minus(second));
 
             if (front.IsZero)
@@ -461,43 +451,33 @@ namespace NullPointersEtc.TelevisionScreen
             myFront = front.AsUnit();
         }
 
-        public NewPoint3D First { get => myFirst; }
-        public NewPoint3D Second { get => mySecond; }
-        public NewPoint3D Third { get => myThird; }
-        public NewVector3D Front { get => myFront; }
+        public Point3DF First { get => myFirst; }
+        public Point3DF Second { get => mySecond; }
+        public Point3DF Third { get => myThird; }
+        public Vector3DF Front { get => myFront; }
 
         public System.Drawing.Color Color { get => myColor; }
 
-        private readonly NewPoint3D myFirst;
-        private readonly NewPoint3D mySecond;
-        private readonly NewPoint3D myThird;
-        private readonly NewVector3D myFront;
+        private readonly Point3DF myFirst;
+        private readonly Point3DF mySecond;
+        private readonly Point3DF myThird;
+        private readonly Vector3DF myFront;
         private readonly System.Drawing.Color myColor;
     }
 
-    /// <summary>
-    /// A wireframe (and optionally filled) 3D object made of vertices, edges and faces.
-    /// Faces are defined as arrays of indices into Vertices, listed in order
-    /// (used for optional filled-polygon rendering with simple depth sorting).
-    /// </summary>
-    public class Mesh3D
+    public class Object3DF
     {
-        public IList<Triangle3D> Triangles { get; } = new List<Triangle3D>();
-        public IList<NewPoint3D> Vertices { get; } = new List<NewPoint3D>();
-        public List<Tuple<int, int>> Edges { get; } = new List<Tuple<int, int>>();
-        public IList<int[]> Faces { get; } = new List<int[]>();
-        public Color EdgeColor { get; set; } = Color.Lime;
-        public Color FaceColor { get; set; } = Color.FromArgb(80, Color.Lime);
-        public bool DrawFaces { get; set; } = false;
-        public bool DrawEdges { get; set; } = true;
+        public IList<Triangle3DF> Triangles { get; } = new List<Triangle3DF>();
+    }
 
-        /// <summary>Builds a simple cube centered on the origin with the given side length.</summary>
-        public static Mesh3D CreateCube(double size, Color? color = null)
+    public class Cube3DF : Object3DF
+    {
+        public Cube3DF(double size)
         {
             float h = (float)(size / 2.0);
-            var mesh = new Mesh3D();
 
-            /*
+            /* Points are numbered like this:
+             *
              *     6__________7
              *    /|         /|
              *   / |        / |
@@ -512,73 +492,80 @@ namespace NullPointersEtc.TelevisionScreen
              * 1__________4
              */
 
-            NewPoint3D point1 = new(x: -h, y: -h, z: 0);
-            NewPoint3D point2 = new(x: -h, y: h, z: 0);
-            NewPoint3D point3 = new(x: h, y: h, z: 0);
-            NewPoint3D point4 = new(x: h, y: -h, z: 0);
+            point1 = new(x: -h, y: -h, z: 0);
+            point2 = new(x: -h, y: h, z: 0);
+            point3 = new(x: h, y: h, z: 0);
+            point4 = new(x: h, y: -h, z: 0);
 
-            NewPoint3D point5 = new(x: -h, y: -h, z: h + h);
-            NewPoint3D point6 = new(x: -h, y: h, z: h + h);
-            NewPoint3D point7 = new(x: h, y: h, z: h + h);
-            NewPoint3D point8 = new(x: h, y: -h, z: h + h);
+            point5 = new(x: -h, y: -h, z: h + h);
+            point6 = new(x: -h, y: h, z: h + h);
+            point7 = new(x: h, y: h, z: h + h);
+            point8 = new(x: h, y: -h, z: h + h);
 
-            mesh.Triangles.Add(new Triangle3D(
+            this.Triangles.Add(new Triangle3DF(
                 first: point1, second: point4, third: point2,
-                color: Color.Red));
+                color: Color.CornflowerBlue));
 
-            mesh.Triangles.Add(new Triangle3D(
+            this.Triangles.Add(new Triangle3DF(
                 first: point3, second: point2, third: point4,
-                color: Color.Chartreuse));
+                color: Color.CornflowerBlue));
 
-            mesh.Triangles.Add(new Triangle3D(
+            this.Triangles.Add(new Triangle3DF(
                 first: point4, second: point8, third: point7,
-                color: Color.Beige));
+                color: Color.IndianRed));
 
-            mesh.Triangles.Add(new Triangle3D(
+            this.Triangles.Add(new Triangle3DF(
                 first: point7, second: point3, third: point4,
-                color: Color.DarkGoldenrod));
+                color: Color.IndianRed));
 
-            Trace.WriteLine("Triangle 1: " + mesh.Triangles[0].First);
-            Trace.WriteLine("Triangle 2: " + mesh.Triangles[0].Second);
-            Trace.WriteLine("Triangle 3: " + mesh.Triangles[0].Third);
-            Trace.WriteLine("Triangle Front: " + mesh.Triangles[0].Front);
+            this.Triangles.Add(new Triangle3DF(
+                first: point3, second: point7, third: point6,
+                color: Color.DarkGreen));
 
+            this.Triangles.Add(new Triangle3DF(
+                first: point3, second: point6, third: point2,
+                color: Color.DarkGreen));
 
-            if (color.HasValue)
-            {
-                mesh.EdgeColor = color.Value;
-                mesh.FaceColor = Color.FromArgb(80, color.Value);
-            }
+            this.Triangles.Add(new Triangle3DF(
+                first: point2, second: point6, third: point5,
+                color: Color.DarkOrange));
 
-            // 8 corners of the cube.
-            mesh.Vertices.Add(item: new NewPoint3D(x: -h, y: -h, z: -h)); // 0
-            mesh.Vertices.Add(item: new NewPoint3D(x: h, y: -h, z: -h)); // 1
-            mesh.Vertices.Add(item: new NewPoint3D(x: h, y: h, z: -h)); // 2
-            mesh.Vertices.Add(item: new NewPoint3D(x: -h, y: h, z: -h)); // 3
-            mesh.Vertices.Add(item: new NewPoint3D(x: -h, y: -h, z: h)); // 4
-            mesh.Vertices.Add(item: new NewPoint3D(x: h, y: -h, z: h)); // 5
-            mesh.Vertices.Add(item: new NewPoint3D(x: h, y: h, z: h)); // 6
-            mesh.Vertices.Add(item: new NewPoint3D(x: -h, y: h, z: h)); // 7
+            this.Triangles.Add(new Triangle3DF(
+                first: point2, second: point5, third: point1,
+                color: Color.DarkOrange));
 
-            int[,] edgeIndices =
-            {
-                {0,1},{1,2},{2,3},{3,0}, // back face
-                {4,5},{5,6},{6,7},{7,4}, // front face
-                {0,4},{1,5},{2,6},{3,7}, // connectors
-            };
+            this.Triangles.Add(new Triangle3DF(
+                first: point1, second: point5, third: point8,
+                color: Color.Navy));
 
-            for (int i = 0; i < edgeIndices.GetLength(0); i++)
-                mesh.Edges.Add(Tuple.Create(edgeIndices[i, 0], edgeIndices[i, 1]));
+            this.Triangles.Add(new Triangle3DF(
+                first: point1, second: point8, third: point4,
+                color: Color.Navy));
 
-            mesh.Faces.Add(new[] { 0, 1, 2, 3 }); // back
-            mesh.Faces.Add(new[] { 4, 5, 6, 7 }); // front
-            mesh.Faces.Add(new[] { 0, 1, 5, 4 }); // bottom
-            mesh.Faces.Add(new[] { 2, 3, 7, 6 }); // top
-            mesh.Faces.Add(new[] { 0, 3, 7, 4 }); // left
-            mesh.Faces.Add(new[] { 1, 2, 6, 5 }); // right
+            this.Triangles.Add(new Triangle3DF(
+                first: point5, second: point6, third: point7,
+                color: Color.LightPink));
 
-            return mesh;
+            this.Triangles.Add(new Triangle3DF(
+                first: point5, second: point7, third: point8,
+                color: Color.LightPink));
         }
+
+        /* Points are numbered like this:
+         *
+         *    6_________7
+         *   /|        /|
+         *  / |       / |
+         * 5_________8  |
+         * |  |      |  |
+         * |  |      |  |
+         * |  2______|__3
+         * | /       | /
+         * |/        |/
+         * 1_________4 */
+
+        private readonly Point3DF point1, point2, point3, point4;
+        private readonly Point3DF point5, point6, point7, point8;
     }
 }
 

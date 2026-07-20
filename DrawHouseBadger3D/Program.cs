@@ -379,18 +379,17 @@ namespace NullPointersEtc.DrawHouseBadger3D
             [AllowNull] object sender,
             EventArgs e)
         {
+            TelevisionScreen.TelevisionScreen screen = new() { Dock = DockStyle.Fill };
+
+            screen.Objects.Add(new NullPointersEtc.TelevisionScreen.Cube3DF(100));
+
             if (drawCanvas is not null)
             {
                 Controls.Remove(drawCanvas);
                 drawCanvas.Dispose();
-                drawCanvas = null;
             }
 
-            drawCanvas = new NullPointersEtc.TelevisionScreen.TelevisionScreen
-            {
-                Dock = DockStyle.Fill
-            };
-
+            drawCanvas = screen;
             Controls.Add(drawCanvas);
         }
 
@@ -420,7 +419,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Standing,ViewDirection.Left) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Standing, ViewDirection.Left) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw3rdBadgerButtonClicked(
@@ -434,7 +433,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Standing,ViewDirection.Back) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Standing, ViewDirection.Back) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw4thBadgerButtonClicked(
@@ -448,7 +447,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Standing,ViewDirection.Right) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Standing, ViewDirection.Right) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw5thBadgerButtonClicked(
@@ -462,7 +461,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Waving,ViewDirection.Front) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Waving, ViewDirection.Front) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw6thBadgerButtonClicked(
@@ -476,7 +475,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Waving,ViewDirection.Left) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Waving, ViewDirection.Left) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw7thBadgerButtonClicked(
@@ -490,7 +489,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Waving,ViewDirection.Back) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Waving, ViewDirection.Back) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw8thBadgerButtonClicked(
@@ -504,7 +503,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Waving,ViewDirection.Right) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Waving, ViewDirection.Right) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw9thBadgerButtonClicked(
@@ -518,7 +517,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.MidStride,ViewDirection.Front) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.MidStride, ViewDirection.Front) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw10thBadgerButtonClicked(
@@ -532,7 +531,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.MidStride,ViewDirection.Left) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.MidStride, ViewDirection.Left) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw11thBadgerButtonClicked(
@@ -546,7 +545,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.MidStride,ViewDirection.Back) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.MidStride, ViewDirection.Back) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw12thBadgerButtonClicked(
@@ -560,7 +559,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.MidStride,ViewDirection.Right) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.MidStride, ViewDirection.Right) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw13thBadgerButtonClicked(
@@ -574,7 +573,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Sitting,ViewDirection.Front) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Sitting, ViewDirection.Front) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw14thBadgerButtonClicked(
@@ -588,7 +587,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Sitting,ViewDirection.Left) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Sitting, ViewDirection.Left) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw15thBadgerButtonClicked(
@@ -602,7 +601,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Sitting,ViewDirection.Back) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Sitting, ViewDirection.Back) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
         private void OnDraw16thBadgerButtonClicked(
@@ -616,7 +615,7 @@ namespace NullPointersEtc.DrawHouseBadger3D
                 drawCanvas = null;
             }
 
-            drawCanvas = new DrawBadger(BadgerPose.Sitting,ViewDirection.Right) { Dock = DockStyle.Fill };
+            drawCanvas = new DrawBadger(BadgerPose.Sitting, ViewDirection.Right) { Dock = DockStyle.Fill };
             Controls.Add(drawCanvas);
         }
 
